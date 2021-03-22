@@ -1,0 +1,37 @@
+﻿// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel mandel
+
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+RWStructuredBuffer<float> xcoord;
+RWStructuredBuffer<float> ycoord;
+RWStructuredBuffer<float4> colormap;
+RWTexture2D<float4> img;
+
+uint iterations;
+uint height;
+uint width;
+
+[numthreads(8,8,1)]
+void mandel (const uint3 id : SV_DispatchThreadID)
+{
+    if(id.x >= width || id.y >= height) return;
+
+    float x = xcoord[id.x];
+    float y = ycoord[id.y];
+    const float x0 = x;
+    const float y0 = y;
+
+    for (uint i = 0; i < iterations; i++) {
+        if (x * x + y * y >= 4) {
+            img[id.xy] = float4(colormap[i]);
+            return;
+        }
+
+        const float zx = x * x - y * y + x0;
+        y = 2 * x * y + y0;
+        x = zx;
+    }
+
+    img[id.xy] = float4(0.0f, 0.0f, 0.0f, 1.0f);
+}
